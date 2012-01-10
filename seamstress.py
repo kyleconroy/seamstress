@@ -1,7 +1,8 @@
 __version_info__ = ('0', '0', '1')
 __version__ = '.'.join(__version_info__)
 
-from fabric.api import abort, sudo
+from fabric.api import sudo
+from fabric.utils import abort
 
 def directory(path, state="created", owner=None, group=None):
     if path == "/":
