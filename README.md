@@ -6,7 +6,7 @@ Enter Seamstress
 
 ## Example
 
-Seamstress is built on top of [Fabric](), and uses the `fabfile.py` to store configurations.
+Seamstress is built on top of [Fabric](fabfile.org), and uses the `fabfile.py` to store configurations.
 
 ```python
 from seamstress import user, directory
@@ -19,6 +19,14 @@ def configure():
 Configure a system using the `fab` command.
 
     $ fab -H 33.33.33.10 configure
+
+### Resources
+
+Currently, seamstress has support for the following resources
+
+- Users
+- Directories
+- Documents
 
 ## Installation
 
