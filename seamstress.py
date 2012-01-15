@@ -5,7 +5,8 @@ import os
 from fabric.api import sudo, settings, hide, put
 from fabric.utils import abort
 
-def document(path, source=None, state="created", mode=None):
+def document(path, source=None, state="created", mode=None, owner=None,
+             group=None):
     if state not in ["created", "deleted"]:
         abort(("A document can't be in state '%s'. "
                "Valid states are 'created' or 'deleted'") % state)
@@ -16,16 +17,17 @@ def document(path, source=None, state="created", mode=None):
 
     if source is None:
         sudo("touch %s" % path)
-        return
+    else:
+        if isinstance(source, basestring) and not os.path.exists(source):
+            abort("No document exists at the local path %s" % source)
 
-    if isinstance(source, basestring) and not os.path.exists(source):
-        abort("No document exists at the local path %s" % source)
+        if isinstance(source, basestring) and not os.path.isfile(source):
+            abort("Specified path %s is a directory" % source)
 
-    if isinstance(source, basestring) and not os.path.isfile(source):
-        abort("Specified path %s is a directory" % source)
+        put(source, path, use_sudo=True, mode=mode)
 
-    put(source, path, use_sudo=True, mode=mode)
-
+    if owner or group:
+        sudo("chown %s:%s %s" % (owner or "", group or "", path))
 
 def user(name, state="created", group=None, system=False):
     if state not in ["created", "deleted"]:

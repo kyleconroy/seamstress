@@ -74,6 +74,25 @@ def test_document_delete():
     document("foobar", state="deleted")
     sudo("test ! -f foobar")
 
+def test_document_owner_group():
+    user("foo")
+    document("foobar", group="foo", owner="foo")
+    assert_equals(sudo('stat -c "%G" foobar'), "foo")
+    assert_equals(sudo('stat -c "%U" foobar'), "foo")
+    user("foo", state="deleted")
+
+def test_document_owner():
+    user("foo")
+    document("foobar", owner="foo")
+    assert_equals(sudo('stat -c "%U" foobar'), "foo")
+    user("foo", state="deleted")
+
+def test_document_user():
+    user("foo")
+    document("/var/web/foobar", group="foo")
+    assert_equals(sudo('stat -c "%G" /var/web/foobar'), "foo")
+    user("foo", state="deleted")
+
 # Directory
 @assert_abort
 def test_directory_no_root():
