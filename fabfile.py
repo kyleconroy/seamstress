@@ -63,8 +63,8 @@ def test_document_create_contents():
     assert_equals(contents, "Hello World")
 
 def test_document_create_mode():
-    document("foobar", mode=644)
-    assert_equals(sudo('stat -c "%a" foobar'), "644")
+    document("foobar", mode=0600)
+    assert_equals(sudo('stat -c "%a" foobar'), "600")
 
 def test_document_create():
     document("foobar")
@@ -89,8 +89,8 @@ def test_document_owner():
 
 def test_document_user():
     user("foo")
-    document("/var/web/foobar", group="foo")
-    assert_equals(sudo('stat -c "%G" /var/web/foobar'), "foo")
+    document("bat", group="foo")
+    assert_equals(sudo('stat -c "%G" bat'), "foo")
     user("foo", state="deleted")
 
 # Directory
@@ -103,7 +103,7 @@ def test_directory_invalid_state():
     directory("/var/web/upickem", state="foobar")
 
 def test_directory_create_mode():
-    directory("/var/web/boom", mode=666)
+    directory("/var/web/boom", mode=0666)
     assert_equals(sudo('stat -c "%a" /var/web/boom'), "666")
 
 def test_directory_create():

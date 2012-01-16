@@ -29,6 +29,10 @@ def document(path, source=None, state="created", mode=None, owner=None,
     if owner or group:
         sudo("chown %s:%s %s" % (owner or "", group or "", path))
 
+    if mode:
+        sudo("chmod %o %s" % (mode, path))
+
+
 def user(name, state="created", group=None, system=False):
     if state not in ["created", "deleted"]:
         abort(("A user can't be in state '%s'. "
@@ -66,6 +70,6 @@ def directory(path, state="created", owner=None, group=None, mode=None):
         sudo("chown %s:%s %s" % (owner or "", group or "", path))
 
     if mode:
-        sudo("chmod %s %s" % (mode, path))
+        sudo("chmod %o %s" % (mode, path))
 
 
