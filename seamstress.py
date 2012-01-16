@@ -6,6 +6,8 @@ from fabric.api import *
 from fabric.utils import abort
 from fabric.contrib import files
 
+__all__ = ["document", "directory", "user", "remote_file", "package"]
+
 def md5(path):
     return sudo("md5sum %s" % path).strip().split(" ")[0]
 
