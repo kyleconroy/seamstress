@@ -2,8 +2,31 @@ __version_info__ = ('0', '0', '1')
 __version__ = '.'.join(__version_info__)
 
 import os
-from fabric.api import sudo, settings, hide, put
+from fabric.api import * 
 from fabric.utils import abort
+from fabric.contrib import files
+
+def md5(path):
+    return sudo("md5sum %s" % path).strip().split(" ")[0]
+
+
+def sha1(path):
+    return sudo("sha1sum %s" % path).strip().split(" ")[0]
+
+
+def calc_checksum(path, checksum):
+    if len(checksum) == 40:
+        return sha1(path)
+    else:
+        return md5(path)
+
+
+def verify(path, checksum):
+    if len(checksum) == 40:
+        return sha1(path) == checksum 
+    else:
+        return md5(path) == checksum
+
 
 def document(path, source=None, state="created", mode=None, owner=None,
              group=None):
@@ -72,4 +95,23 @@ def directory(path, state="created", owner=None, group=None, mode=None):
     if mode:
         sudo("chmod %o %s" % (mode, path))
 
+def remote_file(path, source=None, checksum=None):
+    if checksum and files.exists(path) and verify(path, checksum):
+        return
+
+    with settings(hide('stdout')):
+        sudo("wget -O %s %s" % (path, source))
+
+    if checksum and not verify(path, checksum):
+        abort("File downloaded from %s has signature '%s', expected '%s'" % \
+              (source, calc_checksum(path, checksum), checksum))
+
+def package(name, state=None, version=None):
+    with settings(hide('stdout')):
+        sudo("apt-get update")
+
+    if version:
+        name = name + "=" + version
+
+    sudo("apt-get install %s" % name)
 

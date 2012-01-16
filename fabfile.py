@@ -24,6 +24,41 @@ def assert_abort(func):
     actual_test.__name__ = func.__name__
     return actual_test
 
+# Remote File
+@assert_abort
+def test_remote_file_sha1_wrong():
+    remote_file("/tmp/nginx.tar.gz",
+        source="http://nginx.org/download/nginx-1.0.11.tar.gz",
+        checksum="c06144234144261358ccf785e99f751b8ca0a3bb")
+
+@assert_abort
+def test_remote_file_md5_wrong():
+    remote_file("/tmp/nginx.tar.gz",
+        source="http://nginx.org/download/nginx-1.0.11.tar.gz",
+        checksum="a41a01d7cd46e53ea626d7c9ca283a95")
+    
+def test_remote_file_sha1():
+    remote_file("/tmp/nginx.tar.gz",
+        source="http://nginx.org/download/nginx-1.0.11.tar.gz",
+        checksum="c06144214144b61358ccf785e99f751b8ca0a3bb")
+    sudo("test -f /tmp/nginx.tar.gz")
+
+def test_remote_file():
+    remote_file("/tmp/nginx.tar.gz",
+        source="http://nginx.org/download/nginx-1.0.11.tar.gz")
+    sudo("test -f /tmp/nginx.tar.gz")
+
+def test_remote_file_md5():
+    remote_file("/tmp/nginx.tar.gz",
+        source="http://nginx.org/download/nginx-1.0.11.tar.gz",
+        checksum="a41a01d7cd46e13ea926d7c9ca283a95")
+    sudo("test -f /tmp/nginx.tar.gz")
+
+# Package
+def test_install_nginx():
+    package("nginx")
+    assert_in("0.7.65", sudo("nginx -v"))
+
 # Users
 @assert_abort
 def test_user_invalid_state():
@@ -133,11 +168,7 @@ def test_directory_user():
     assert_equals(sudo('stat -c "%G" /var/web/foobar'), "foo")
     user("foo", state="deleted")
 
-@task
 def seamstress_test():
-    # setup
-    # sudo("adduser foo")
-
     tests = [f for f in globals().iteritems() if f[0].startswith("test")]
     random.shuffle(tests)
 
