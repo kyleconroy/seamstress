@@ -54,6 +54,24 @@ def test_remote_file_md5():
         checksum="a41a01d7cd46e13ea926d7c9ca283a95")
     sudo("test -f /tmp/nginx.tar.gz")
 
+def test_remote_file_create_mode():
+    remote_file("/tmp/nginx.tar.gz",
+        source="http://nginx.org/download/nginx-1.0.11.tar.gz",
+        checksum="a41a01d7cd46e13ea926d7c9ca283a95",
+        mode=0600)
+    assert_equals(sudo('stat -c "%a" /tmp/nginx.tar.gz'), "600")
+
+def test_remote_file_owner_group():
+    user("foo")
+    remote_file("/tmp/nginx.tar.gz",
+        source="http://nginx.org/download/nginx-1.0.11.tar.gz",
+        checksum="a41a01d7cd46e13ea926d7c9ca283a95",
+        group="foo",
+        owner="foo")
+    assert_equals(sudo('stat -c "%G" /tmp/nginx.tar.gz'), "foo")
+    assert_equals(sudo('stat -c "%U" /tmp/nginx.tar.gz'), "foo")
+    user("foo", state="deleted")
+
 # Package
 def test_install_nginx():
     package("nginx")

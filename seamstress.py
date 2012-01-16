@@ -97,16 +97,21 @@ def directory(path, state="created", owner=None, group=None, mode=None):
     if mode:
         sudo("chmod %o %s" % (mode, path))
 
-def remote_file(path, source=None, checksum=None):
-    if checksum and files.exists(path) and verify(path, checksum):
-        return
-
-    with settings(hide('stdout')):
-        sudo("wget -O %s %s" % (path, source))
+def remote_file(path, source=None, checksum=None, group=None, owner=None,
+                mode=None):
+    if not (checksum and files.exists(path) and verify(path, checksum)):
+        with settings(hide('stdout')):
+            sudo("wget -O %s %s" % (path, source))
 
     if checksum and not verify(path, checksum):
         abort("File downloaded from %s has signature '%s', expected '%s'" % \
               (source, calc_checksum(path, checksum), checksum))
+
+    if owner or group:
+        sudo("chown %s:%s %s" % (owner or "", group or "", path))
+
+    if mode:
+        sudo("chmod %o %s" % (mode, path))
 
 def package(name, state=None, version=None):
     with settings(hide('stdout')):
