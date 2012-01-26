@@ -1,7 +1,7 @@
 import random
 from fabric.api import *
 from fabric.colors import magenta
-from seamstress import *
+from seamstress.core import *
 from mock import patch
 from nose.tools import assert_equals, assert_in, assert_not_in, with_setup
 
@@ -12,7 +12,7 @@ def del_user():
     user("foo", state="deleted")
 
 def assert_abort(func):
-    @patch("seamstress.abort")
+    @patch("seamstress.core.abort")
     def actual_test(mock):
         mock.side_effect = KeyError
         try:
