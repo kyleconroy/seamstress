@@ -1,12 +1,13 @@
-__version_info__ = ('0', '0', '1')
-__version__ = '.'.join(__version_info__)
-
 import os
 from fabric.api import * 
 from fabric.utils import abort
 from fabric.contrib import files
+from seamstress import system
+from fabric.contrib.project import rsync_project
 
-__all__ = ["document", "directory", "user", "remote_file", "package"]
+
+__all__ = ["document", "directory", "user", "remote_file", "package", "gem",
+           "git", "nginx_site", "jekyll", "ecosystem", "link"]
 
 def md5(path):
     return sudo("md5sum %s" % path).strip().split(" ")[0]
@@ -28,6 +29,58 @@ def verify(path, checksum):
         return sha1(path) == checksum 
     else:
         return md5(path) == checksum
+
+
+def nginx_site(conf, state="enabled"):
+    basename = os.path.basename(conf)
+    document("/etc/nginx/conf.d/{}".format(basename),
+        source=conf)
+
+
+def gem(name, version=None, state="installed"):
+    with settings(warn_only=True):
+        installed = sudo("gem list -i {}".format(name)) 
+
+    if state == "uninstalled":
+        if installed == "true":
+            sudo("gem uninstall -a -I -x {}".format(name))
+        return
+
+    if version:
+        vflag = "--version '{}'".format(version)
+    else:
+        vflag = ""
+
+    with settings(warn_only=True):
+        result = sudo("gem install {} {} --no-ri --no-rdoc".format(name, vflag))
+        if result.failed and not result.return_code == -1:
+            abort("The {} gem can't be found".format(name))
+
+def ecosystem(language):
+    if language == "python":
+        package("python-software-properties")
+        sudo("add-apt-repository ppa:fkrull/deadsnakes")
+        package("python2.7")
+
+        remote_file("/tmp/distribute_setup.py",
+            source="http://python-distribute.org/distribute_setup.py",
+            mode=0644)
+
+        sudo("python2.7 /tmp/distribute_setup.py")
+
+        if not system.installed("pip-2.7"):
+            sudo("easy_install-2.7 pip")
+
+        if not system.installed("virtualenv"):
+            sudo("pip-2.7 install virtualenv")
+
+
+def git(path, repository, branch="master", state="created"):
+    pass
+
+
+def jekyll(path, source=None):
+    pass
 
 
 def document(path, source=None, state="created", mode=None, owner=None,
@@ -77,7 +130,8 @@ def user(name, state="created", group=None, system=False):
                       "exited with status %s" % (name, result.return_code))
 
 
-def directory(path, state="created", owner=None, group=None, mode=None):
+def directory(path, state="created", owner=None, group=None, 
+              mode=None, source=None):
     if path == "/":
         abort("Configuring / is considered harmful")
 
@@ -96,6 +150,17 @@ def directory(path, state="created", owner=None, group=None, mode=None):
 
     if mode:
         sudo("chmod %o %s" % (mode, path))
+
+    if source:
+        if not source.endswith("/"):
+            source += "/"
+        rsync_project(path, local_dir=source, delete=True, exclude=[".*"])
+
+
+def link(target, to=None):
+    if not to:
+        abort("The real file you want to link to is required")
+    sudo("ln -s {} {}".format(to, target))
 
 def remote_file(path, source=None, checksum=None, group=None, owner=None,
                 mode=None):
@@ -120,5 +185,5 @@ def package(name, state=None, version=None):
     if version:
         name = name + "=" + version
 
-    sudo("apt-get install %s" % name)
+    sudo("yes | apt-get install %s" % name)
 
