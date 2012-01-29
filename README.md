@@ -20,11 +20,12 @@ Configure a system using the `fab` command.
 
 ### Resources
 
-Currently, seamstress has support for the following resources
+seamstress supports the following resources
 
-- Users
-- Directories
-- Documents
+* user
+* directory 
+* document 
+* remote_file
 
 ## Installation
 
