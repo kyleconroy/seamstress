@@ -1,15 +1,13 @@
-# Seamstress - Simple Configuration Management
+![Seamstress - Simple Configuration Management](https://github.com/derferman/seamstress/raw/master/logo.jpg)
 
 Chef and Puppet are great, but what if you just want to easily manage a couple of servers?
-
-Enter Seamstress
 
 ## Example
 
 Seamstress is built on top of [Fabric](fabfile.org), and uses the `fabfile.py` to store configurations.
 
 ```python
-from seamstress import user, directory
+from seamstress.core import * 
 
 def configure():
     user("ubuntu")
