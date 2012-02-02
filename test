@@ -1,1 +1,1 @@
-fab -H 33.33.33.10 -u vagrant -p vagrant seamstress_test
+fab -f tests/fabfile.py -H 33.33.33.10 -u vagrant -p vagrant functional
