@@ -36,6 +36,10 @@ def nginx_site(conf, state="enabled"):
     document("/etc/nginx/conf.d/{}".format(basename),
         source=conf)
 
+    with settings(warn_only=True):
+        if sudo("nginx -s reload").failed:
+            sudo("nginx")
+
 
 def gem(name, version=None, state="installed"):
     with settings(warn_only=True):
