@@ -9,7 +9,7 @@ setup(
     author_email = "kyle@twilio.com",
     url = "http://github.com/derferman/seamstress",
     keywords = ["configuration management"],
-    install_requires = ["fabric >= 1.3"],
+    install_requires = ["fabric == 1.4"],
     packages = find_packages(),
     classifiers = [
         "Development Status :: 3 - Alpha",
