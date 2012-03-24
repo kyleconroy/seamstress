@@ -7,6 +7,7 @@ from tests.test_remote_file import *
 from tests.test_user import *
 from tests.test_directory import *
 from tests.test_document import *
+from tests.test_link import *
 
 
 def functional():
@@ -19,7 +20,8 @@ def functional():
     for (name, thing) in tests: 
 
    
-        with settings(hide("status", "running", "warnings", "aborts", "stdout", "stderr")):
+        with settings(hide("status", "running", "warnings",
+                           "aborts", "stdout", "stderr")):
             try:
                 total += 1
                 execute(thing)

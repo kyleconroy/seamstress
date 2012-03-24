@@ -9,6 +9,18 @@ from fabric.contrib.project import rsync_project
 __all__ = ["document", "directory", "user", "remote_file", "package",
            "git", "nginx_site", "jekyll", "ecosystem", "link"]
 
+def states(*states):
+    def func(f):
+        def wrapper(*args, **kwargs):
+            if "state" in kwargs and kwargs["state"] not in states:
+                msg = "A {} can't be in state {}. ".format(f.__name__, kwargs["state"])
+                msg += "Valid states are {}".format(', '.join(states))
+                abort(msg)
+            f(*args, **kwargs)
+        return wrapper
+    return func
+
+
 def md5(path):
     return sudo("md5sum %s" % path).strip().split(" ")[0]
 
@@ -67,12 +79,21 @@ def jekyll(path, source=None):
     pass
 
 
+def _file_attribs(location, mode=None, owner=None, group=None, recursive=False):
+    """Updates the mode/owner/group for the remote file at the given
+    location."""
+    recursive = recursive and "-R " or ""
+    if mode:
+        sudo('chmod {} {:o} "{}"'.format(recursive, mode,  location))
+    if owner:
+        sudo('chown {} {} "{}"'.format(recursive, owner, location))
+    if group:
+        sudo('chgrp {} {} "{}"'.format(recursive, group, location))
+
+
+@states("created", "deleted")
 def document(path, source=None, state="created", mode=None, owner=None,
              group=None):
-    if state not in ["created", "deleted"]:
-        abort(("A document can't be in state '%s'. "
-               "Valid states are 'created' or 'deleted'") % state)
-
     if state == "deleted":
         sudo("rm -f %s" % path)
         return
@@ -88,18 +109,11 @@ def document(path, source=None, state="created", mode=None, owner=None,
 
         put(source, path, use_sudo=True, mode=mode)
 
-    if owner or group:
-        sudo("chown %s:%s %s" % (owner or "", group or "", path))
-
-    if mode:
-        sudo("chmod %o %s" % (mode, path))
+    _file_attribs(path, mode=mode, owner=owner, group=group)
 
 
+@states("created", "deleted")
 def user(name, state="created", group=None, system=False):
-    if state not in ["created", "deleted"]:
-        abort(("A user can't be in state '%s'. "
-               "Valid states are 'created' or 'deleted'") % state)
-
     if state == "deleted":
         with settings(warn_only=True):
             result = sudo("userdel %s" % name)
@@ -114,6 +128,7 @@ def user(name, state="created", group=None, system=False):
                       "exited with status %s" % (name, result.return_code))
 
 
+@states("created", "deleted")
 def directory(path, state="created", owner=None, group=None, 
               mode=None, source=None):
     if path == "/":
@@ -129,11 +144,7 @@ def directory(path, state="created", owner=None, group=None,
 
     sudo("mkdir -p %s" % path)
 
-    if owner or group:
-        sudo("chown %s:%s %s" % (owner or "", group or "", path))
-
-    if mode:
-        sudo("chmod %o %s" % (mode, path))
+    _file_attribs(path, mode=mode, owner=owner, group=group)
 
     if source:
         if not source.endswith("/"):
@@ -141,10 +152,19 @@ def directory(path, state="created", owner=None, group=None,
         rsync_project(path, local_dir=source, delete=True, exclude=[".*"])
 
 
-def link(target, to=None):
-    if not to:
-        abort("The real file you want to link to is required")
-    sudo("ln -s {} {}".format(to, target))
+@states("created", "deleted")
+def link(source, destination, state="created",
+         symbolic=True, mode=None, owner=None, group=None):
+    """Creates a (symbolic) link between source and destination on the remote host,
+    optionally setting its mode/owner/group."""
+    if state == "deleted":
+        sudo("rm -rf %s" % destination)
+        return
+    if symbolic:
+        sudo('ln -sf "{}" "{}"'.format(source, destination))
+    else:
+        sudo('ln -f "{}" "{}"'.format(source, destination))
+    _file_attribs(destination, mode, owner, group)
 
 
 def remote_file(path, source=None, checksum=None, group=None, owner=None,
