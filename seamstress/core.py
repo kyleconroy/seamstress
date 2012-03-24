@@ -183,12 +183,45 @@ def remote_file(path, source=None, checksum=None, group=None, owner=None,
     if mode:
         sudo("chmod %o %s" % (mode, path))
 
-def package(name, state=None, version=None):
-    with settings(hide('stdout')):
-        sudo("apt-get update")
+def repository_ensure_apt(repository):
+    sudo("add-apt-repository " + repository)
 
-    if version:
-        name = name + "=" + version
 
-    sudo("yes | apt-get install %s" % name)
+def package_upgrade_apt():
+    sudo("apt-get --yes upgrade")
 
+
+def package_update_apt(package=None):
+    if package == None:
+        sudo("apt-get --yes update")
+    else:
+        if type(package) in (list, tuple):
+            package = " ".join(package)
+        sudo("apt-get --yes upgrade " + package)
+
+
+def package_upgrade_apt(package=None):
+    sudo("apt-get --yes upgrade")
+
+
+def package_install_apt(package, update=False):
+    if update:
+        sudo("apt-get --yes update")
+    if type(package) in (list, tuple):
+        package = " ".join(package)
+    sudo("apt-get --yes install %s" % (package))
+
+
+def package_ensure_apt(package, update=False):
+    status = run("dpkg-query -W -f='${Status}' %s ; true" % package)
+    if status.find("not-installed") != -1 or status.find("installed") == -1:
+        package_install_apt(package)
+        return False
+    else:
+        if update:
+            package_update_apt(package)
+        return True
+
+
+def package(name):
+    package_ensure_apt(name, update=True)
