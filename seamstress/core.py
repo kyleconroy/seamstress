@@ -52,10 +52,10 @@ def nginx_site(conf, state="enabled"):
         if sudo("nginx -s reload").failed:
             sudo("nginx")
 
-def ecosystem(language):
-    if language == "python":
+def ecosystem(lang, version=None):
+    if lang == "python":
         package("python-software-properties")
-        sudo("add-apt-repository ppa:fkrull/deadsnakes")
+        package_repository("ppa:fkrull/deadsnakes")
         package("python2.7")
 
         remote_file("/tmp/distribute_setup.py",
@@ -63,12 +63,8 @@ def ecosystem(language):
             mode=0644)
 
         sudo("python2.7 /tmp/distribute_setup.py")
-
-        if not system.installed("pip-2.7"):
-            sudo("easy_install-2.7 pip")
-
-        if not system.installed("virtualenv"):
-            sudo("pip-2.7 install virtualenv")
+        sudo("easy_install-2.7 pip")
+        sudo("pip-2.7 install virtualenv")
 
 
 def git(path, repository, branch="master", state="created"):
@@ -183,7 +179,8 @@ def remote_file(path, source=None, checksum=None, group=None, owner=None,
     if mode:
         sudo("chmod %o %s" % (mode, path))
 
-def repository_ensure_apt(repository):
+
+def package_repository(repository):
     sudo("add-apt-repository " + repository)
 
 
@@ -215,7 +212,7 @@ def package_install_apt(package, update=False):
 def package_ensure_apt(package, update=False):
     status = run("dpkg-query -W -f='${Status}' %s ; true" % package)
     if status.find("not-installed") != -1 or status.find("installed") == -1:
-        package_install_apt(package)
+        package_install_apt(package, update=update)
         return False
     else:
         if update:

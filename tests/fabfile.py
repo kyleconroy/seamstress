@@ -7,6 +7,7 @@ from tests.test_remote_file import *
 from tests.test_user import *
 from tests.test_directory import *
 from tests.test_document import *
+from tests.test_core import *
 from tests.test_link import *
 
 
