@@ -6,7 +6,7 @@ from seamstress import system
 from fabric.contrib.project import rsync_project
 
 
-__all__ = ["document", "directory", "user", "remote_file", "package", "gem",
+__all__ = ["document", "directory", "user", "remote_file", "package",
            "git", "nginx_site", "jekyll", "ecosystem", "link"]
 
 def md5(path):
@@ -145,6 +145,7 @@ def link(target, to=None):
     if not to:
         abort("The real file you want to link to is required")
     sudo("ln -s {} {}".format(to, target))
+
 
 def remote_file(path, source=None, checksum=None, group=None, owner=None,
                 mode=None):
