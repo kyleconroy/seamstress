@@ -1,1 +1,0 @@
-fab -f tests/fabfile.py -H 33.33.33.10 -u vagrant -p vagrant functional

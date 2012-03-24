@@ -37,9 +37,9 @@ or, if you must
 
 ## Development
 
-I use [Vagrant](www.vagrantup.com) to test `seamstress`. If you want to run the tests, you'll need to boot up a VM available at the address 33.33.33.10.
+I test on a t1.micro instance on EC2 running Ubuntu 10.04 64-bit.
 
     $ pip install -r requirements.txt
-    $ ./test
+    $ fab --config tests/fabricrc functional
 
 
