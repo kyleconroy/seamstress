@@ -7,7 +7,7 @@ from fabric.contrib.project import rsync_project
 
 
 __all__ = ["document", "directory", "user", "remote_file", "package",
-           "git_repository", "nginx_site", "ecosystem", "link", "service",
+           "git_repository", "nginx_conf", "ecosystem", "link", "service",
            "foreman_service"]
 
 def states(*states):
@@ -44,14 +44,15 @@ def verify(path, checksum):
         return md5(path) == checksum
 
 
-def nginx_site(conf, state="enabled"):
+def nginx_conf(conf, state="enabled"):
     basename = os.path.basename(conf)
-    document("/etc/nginx/conf.d/{}".format(basename),
-        source=conf)
+    sudo("cp {} /etc/nginx/conf.d/{}".format(conf, basename))
 
     with settings(warn_only=True):
-        if sudo("nginx -s reload").failed:
-            sudo("nginx")
+        result = sudo("nginx -s reload")
+    if result.failed:
+        sudo("nginx")
+
 
 def ecosystem(lang, version=None):
     if lang == "python":
@@ -249,5 +250,6 @@ def foreman_service(name, port=5000):
         command = ("foreman export upstart /etc/init "
                    "--app {} --port {} --user ubuntu")
         sudo(command.format(name, port))
-    sudo("stop {}".format(name))
+    with settings(warn_only=True):
+        sudo("stop {}".format(name))
     sudo("start {}".format(name))
