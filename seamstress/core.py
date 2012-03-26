@@ -7,7 +7,7 @@ from fabric.contrib.project import rsync_project
 
 
 __all__ = ["document", "directory", "user", "remote_file", "package",
-           "git", "nginx_site", "jekyll", "ecosystem", "link"]
+           "git_repository", "nginx_site", "jekyll", "ecosystem", "link"]
 
 def states(*states):
     def func(f):
@@ -73,8 +73,12 @@ def ecosystem(lang, version=None):
         sudo("gem install foreman --no-ri --no-rdoc")
 
 
-def git(path, repository, branch="master", state="created"):
-    pass
+def git_repository(path, repository, branch="master", state="created"):
+    if not files.exists(path, use_sudo=True):
+        sudo("git clone {} {}".format(repository, path))
+    with cd(path):
+        sudo("git checkout {}".format(branch))
+        sudo("git pull origin {}".format(branch))
 
 
 def jekyll(path, source=None):
