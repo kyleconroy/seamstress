@@ -9,6 +9,7 @@ from tests.test_directory import *
 from tests.test_document import *
 from tests.test_core import *
 from tests.test_link import *
+from tests.test_python import *
 
 
 def functional():

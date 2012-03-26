@@ -65,6 +65,12 @@ def ecosystem(lang, version=None):
         sudo("python2.7 /tmp/distribute_setup.py")
         sudo("easy_install-2.7 pip")
         sudo("pip-2.7 install virtualenv")
+        return
+    if lang == "ruby":
+        package_repository("ppa:ubuntu-on-rails")
+        package("ruby1.9.2")
+        package("rubygems")
+        sudo("gem install foreman --no-ri --no-rdoc")
 
 
 def git(path, repository, branch="master", state="created"):

@@ -17,12 +17,12 @@ def test_document_invalid_path():
     document("foobar", source="foo/bar/man.txt")
 
 def test_document_create_file():
-    document("foobar", source=open("tests/hello.txt"))
+    document("foobar", source=open("tests/files/hello.txt"))
     contents = sudo("cat foobar")
     assert_equals(contents, "Hello World")
 
 def test_document_create_contents():
-    document("foobar", source="tests/hello.txt")
+    document("foobar", source="tests/files/hello.txt")
     contents = sudo("cat foobar")
     assert_equals(contents, "Hello World")
 
