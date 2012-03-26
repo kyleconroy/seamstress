@@ -7,7 +7,8 @@ from fabric.contrib.project import rsync_project
 
 
 __all__ = ["document", "directory", "user", "remote_file", "package",
-           "git_repository", "nginx_site", "jekyll", "ecosystem", "link"]
+           "git_repository", "nginx_site", "ecosystem", "link", "service",
+           "foreman_service"]
 
 def states(*states):
     def func(f):
@@ -232,3 +233,21 @@ def package_ensure_apt(package, update=False):
 
 def package(name):
     package_ensure_apt(name, update=True)
+
+
+def service(name):
+    with settings(warn_only=True):
+        status = sudo("service {} status".format(name))
+    if status.failed:
+        sudo("service {} start".format(name))
+    else:
+        sudo("service {} restart".format(name))
+
+
+def foreman_service(name, port=5000):
+    with prefix('export PATH="/var/lib/gems/1.8/bin:$PATH"'):
+        command = ("foreman export upstart /etc/init "
+                   "--app {} --port {} --user ubuntu")
+        sudo(command.format(name, port))
+    sudo("stop {}".format(name))
+    sudo("start {}".format(name))

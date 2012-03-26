@@ -20,3 +20,12 @@ def test_git_repo():
     core.git_repository("seamstress", "git://github.com/derferman/seamstress.git")
     with cd("seamstress"):
         assert_in("master", run("git branch"))
+
+
+def test_foreman_service():
+    core.git_repository("responsive", "git://github.com/derferman/areyouresponsive.git")
+
+    with cd("responsive"):
+        core.foreman_service("areyouresponsive")
+
+    sudo("test -f /etc/init/areyouresponsive.conf")
