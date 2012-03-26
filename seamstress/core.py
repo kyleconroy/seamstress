@@ -45,6 +45,8 @@ def verify(path, checksum):
 
 
 def nginx_conf(conf, state="enabled"):
+    if files.exists("/etc/nginx/sites-enabled/default"):
+        sudo("rm /etc/nginx/sites-enabled/default")
     basename = os.path.basename(conf)
     sudo("cp {} /etc/nginx/conf.d/{}".format(conf, basename))
 
