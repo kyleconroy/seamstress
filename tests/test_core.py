@@ -39,6 +39,11 @@ def test_nginx_install():
     assert_in("1.0.14", run("nginx -v"))
 
 
-def test_postgre_install():
+def test_postgre_database():
     postgre.installation()
-    assert_in("9.1", run("psql --version"))
+    postgre.database("foobar")
+    assert_in("foobar", sudo("psql -l", user="postgres"))
+
+def test_postgre_user():
+    postgre.installation()
+    postgre.user("boo")

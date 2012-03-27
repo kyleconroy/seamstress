@@ -2,6 +2,7 @@ from fabric.api import *
 from fabric.contrib import files
 from seamstress import core
 
+
 def installation():
     core.package_repository("ppa:nginx/stable")
     core.package("nginx")
