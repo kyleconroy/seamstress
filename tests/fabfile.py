@@ -1,8 +1,6 @@
 import random
 from fabric.api import *
 from fabric import colors
-#from tests.test_ruby import *
-from tests.test_package import *
 from tests.test_remote_file import *
 from tests.test_user import *
 from tests.test_directory import *
