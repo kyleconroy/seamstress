@@ -1,4 +1,7 @@
 from seamstress import core
+from seamstress import mysql
+from seamstress import nginx
+from seamstress import postgre
 from nose.tools import assert_equals, assert_in
 from tail import assert_abort
 from fabric.api import *
@@ -29,3 +32,13 @@ def test_foreman_service():
         core.foreman_service("areyouresponsive")
 
     sudo("test -f /etc/init/areyouresponsive.conf")
+
+
+def test_nginx_install():
+    nginx.installation()
+    assert_in("1.0.14", run("nginx -v"))
+
+
+def test_postgre_install():
+    postgre.installation()
+    assert_in("9.1", run("psql --version"))

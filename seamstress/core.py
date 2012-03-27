@@ -7,7 +7,7 @@ from fabric.contrib.project import rsync_project
 
 
 __all__ = ["document", "directory", "user", "remote_file", "package",
-           "git_repository", "nginx_conf", "ecosystem", "link", "service",
+           "git_repository", "ecosystem", "link", "service",
            "foreman_service"]
 
 def states(*states):
@@ -42,18 +42,6 @@ def verify(path, checksum):
         return sha1(path) == checksum 
     else:
         return md5(path) == checksum
-
-
-def nginx_conf(conf, state="enabled"):
-    if files.exists("/etc/nginx/sites-enabled/default"):
-        sudo("rm /etc/nginx/sites-enabled/default")
-    basename = os.path.basename(conf)
-    sudo("cp {} /etc/nginx/conf.d/{}".format(conf, basename))
-
-    with settings(warn_only=True):
-        result = sudo("nginx -s reload")
-    if result.failed:
-        sudo("nginx")
 
 
 def ecosystem(lang, version=None):
