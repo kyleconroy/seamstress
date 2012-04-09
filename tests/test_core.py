@@ -47,4 +47,13 @@ def test_postgres_database():
 
 def test_postgres_user():
     postgres.installation()
-    postgres.user("boo")
+    postgres.user("boo", "foo")
+    assert_in("boo", sudo('psql -c "\\du"', user="postgres"))
+
+def test_postgres_privilege():
+    postgres.installation()
+    postgres.database("foobar")
+    postgres.user("boo", "foo")
+    postgres.privilege("all",
+            user="boo",
+            database="foobar")

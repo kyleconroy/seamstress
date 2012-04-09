@@ -9,16 +9,24 @@ def installation():
     core.package("libpq-dev")
 
 
-def user(name):
+def user(name, password):
+    cmd = ('psql -c "CREATE USER {} WITH NOCREATEDB NOCREATEUSER '
+           'ENCRYPTED PASSWORD E\'{}\'"')
     with settings(hide("warnings"), warn_only=True):
-        result = sudo('createuser -R -S -d {}'.format(name), user="postgres")
+        result = sudo(cmd.format(name, password), user='postgres')
     if result.failed and 'role "{}" already exists'.format(name) not in result:
         abort(str(result))
 
 
 def database(name):
-    with settings(hide("stdout")):
-        result = sudo("psql -l", user="postgres")
-    if name not in result:
-        sudo('createdb {}'.format(name), user="postgres")
+    with settings(hide("warnings"), warn_only=True):
+        result = sudo('psql -c "CREATE DATABASE {}"'.format(name), user='postgres')
+    if result.failed and 'database "{}" already exists'.format(name) not in result:
+        abort(str(result))
 
+
+def privilege(name, user=None, database=None):
+    if not user or not database:
+        abort("name and database required")
+    cmd = 'psql -c "GRANT ALL PRIVILEGES ON DATABASE {} TO {}"'
+    sudo(cmd.format(database, user), user='postgres')
