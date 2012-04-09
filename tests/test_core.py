@@ -1,32 +1,33 @@
 from seamstress import core
 from seamstress import mysql
 from seamstress import nginx
-from seamstress import postgre
+from seamstress import postgres
+from seamstress import ruby, python
 from nose.tools import assert_equals, assert_in
 from tail import assert_abort
 from fabric.api import *
 
 def test_python():
-    core.ecosystem("python")
+    python.installation()
     assert_in("2.7", run("python2.7 --version"))
 
 def test_ruby():
-    core.ecosystem("ruby")
+    ruby.installation()
     assert_in("1.9", run("ruby1.9.2 --version"))
 
 def test_ruby_gems():
-    core.ecosystem("ruby")
+    ruby.installation()
     assert_in("1.3.7", run("gem -v"))
 
 def test_git_repo():
     core.package("git-core")
-    core.git_repository("seamstress", "git://github.com/derferman/seamstress.git")
+    core.git_repository("seamstress", "git://github.com/kyleconroy/seamstress.git")
     with cd("seamstress"):
         assert_in("master", run("git branch"))
 
 
 def test_foreman_service():
-    core.git_repository("responsive", "git://github.com/derferman/areyouresponsive.git")
+    core.git_repository("responsive", "git://github.com/kyleconroy/areyouresponsive.git")
 
     with cd("responsive"):
         core.foreman_service("areyouresponsive")
@@ -39,11 +40,11 @@ def test_nginx_install():
     assert_in("1.0.14", run("nginx -v"))
 
 
-def test_postgre_database():
-    postgre.installation()
-    postgre.database("foobar")
+def test_postgres_database():
+    postgres.installation()
+    postgres.database("foobar")
     assert_in("foobar", sudo("psql -l", user="postgres"))
 
-def test_postgre_user():
-    postgre.installation()
-    postgre.user("boo")
+def test_postgres_user():
+    postgres.installation()
+    postgres.user("boo")

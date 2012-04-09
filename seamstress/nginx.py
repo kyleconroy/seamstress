@@ -1,3 +1,4 @@
+import os
 from fabric.api import *
 from fabric.contrib import files
 from seamstress import core

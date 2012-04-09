@@ -1,4 +1,12 @@
 from fabric.api import *
+from seamstress import core
+
+def installation():
+    core.package_repository("ppa:ubuntu-on-rails")
+    core.package("ruby1.9.2")
+    core.package("rubygems")
+    gem("foreman")
+
 
 def gem(name, version=None, state="installed"):
     with settings(warn_only=True):

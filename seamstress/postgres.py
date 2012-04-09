@@ -6,6 +6,7 @@ from seamstress import core
 def installation():
     core.package_repository("ppa:pitti/postgresql") 
     core.package("postgresql-9.1")
+    core.package("libpq-dev")
 
 
 def user(name):

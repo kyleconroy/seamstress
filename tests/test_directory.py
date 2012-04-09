@@ -20,6 +20,10 @@ def test_directory_create():
     directory("/var/web/upickem")
     sudo("test -d /var/web/upickem")
 
+def test_directory_context_manager():
+    with directory("/var/web/upickem"):
+        assert_equals("/var/web/upickem", sudo("pwd"))
+
 def test_directory_delete():
     directory("/var/web/foobar", state="deleted")
     sudo("test ! -d /var/web/foobar")

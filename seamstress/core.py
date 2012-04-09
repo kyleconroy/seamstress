@@ -7,8 +7,7 @@ from fabric.contrib.project import rsync_project
 
 
 __all__ = ["document", "directory", "user", "remote_file", "package",
-           "git_repository", "ecosystem", "link", "service",
-           "foreman_service"]
+           "git_repository", "link", "service", "foreman_service", "copy"]
 
 def states(*states):
     def func(f):
@@ -17,7 +16,7 @@ def states(*states):
                 msg = "A {} can't be in state {}. ".format(f.__name__, kwargs["state"])
                 msg += "Valid states are {}".format(', '.join(states))
                 abort(msg)
-            f(*args, **kwargs)
+            return f(*args, **kwargs)
         return wrapper
     return func
 
@@ -44,33 +43,13 @@ def verify(path, checksum):
         return md5(path) == checksum
 
 
-def ecosystem(lang, version=None):
-    if lang == "python":
-        package("python-software-properties")
-        package_repository("ppa:fkrull/deadsnakes")
-        package("python2.7")
-
-        remote_file("/tmp/distribute_setup.py",
-            source="http://python-distribute.org/distribute_setup.py",
-            mode=0644)
-
-        sudo("python2.7 /tmp/distribute_setup.py")
-        sudo("easy_install-2.7 pip")
-        sudo("pip-2.7 install virtualenv")
-        return
-    if lang == "ruby":
-        package_repository("ppa:ubuntu-on-rails")
-        package("ruby1.9.2")
-        package("rubygems")
-        sudo("gem install foreman --no-ri --no-rdoc")
-
-
-def git_repository(path, repository, branch="master", state="created"):
+def git_repository(path, repository, branch="master", **kwargs): 
     if not files.exists(path, use_sudo=True):
         sudo("git clone {} {}".format(repository, path))
     with cd(path):
         sudo("git checkout {}".format(branch))
         sudo("git pull origin {}".format(branch))
+    return directory(path, **kwargs)
 
 
 def jekyll(path, source=None):
@@ -80,7 +59,7 @@ def jekyll(path, source=None):
 def _file_attribs(location, mode=None, owner=None, group=None, recursive=False):
     """Updates the mode/owner/group for the remote file at the given
     location."""
-    recursive = recursive and "-R " or ""
+    recursive = "-R " if recursive else ""
     if mode:
         sudo('chmod {} {:o} "{}"'.format(recursive, mode,  location))
     if owner:
@@ -110,6 +89,10 @@ def document(path, source=None, state="created", mode=None, owner=None,
     _file_attribs(path, mode=mode, owner=owner, group=group)
 
 
+def copy(path, source):
+    sudo("cp {} {}".format(source, path))
+
+
 @states("created", "deleted")
 def user(name, state="created", group=None, system=False):
     if state == "deleted":
@@ -128,7 +111,7 @@ def user(name, state="created", group=None, system=False):
 
 @states("created", "deleted")
 def directory(path, state="created", owner=None, group=None, 
-              mode=None, source=None):
+              mode=None, source=None, recursive=False):
     if path == "/":
         abort("Configuring / is considered harmful")
 
@@ -142,12 +125,15 @@ def directory(path, state="created", owner=None, group=None,
 
     sudo("mkdir -p %s" % path)
 
-    _file_attribs(path, mode=mode, owner=owner, group=group)
+    _file_attribs(path, mode=mode, owner=owner, group=group, 
+                  recursive=recursive)
 
     if source:
         if not source.endswith("/"):
             source += "/"
         rsync_project(path, local_dir=source, delete=True, exclude=[".*"])
+
+    return cd(path)
 
 
 @states("created", "deleted")
@@ -235,11 +221,16 @@ def service(name):
         sudo("service {} restart".format(name))
 
 
-def foreman_service(name, port=5000):
+def foreman_service(name, port=5000, user="ubuntu", env=None):
     with prefix('export PATH="/var/lib/gems/1.8/bin:$PATH"'):
         command = ("foreman export upstart /etc/init "
-                   "--app {} --port {} --user ubuntu")
-        sudo(command.format(name, port))
+                   "--app {} --port {} --user {}")
+        cmd = command.format(name, port, user)
+
+        if env:
+            cmd += "--env {}".format(env)
+
+        sudo(cmd)
     with settings(warn_only=True):
         sudo("stop {}".format(name))
     sudo("start {}".format(name))
