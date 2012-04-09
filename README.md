@@ -1,4 +1,4 @@
-![Seamstress - Simple Configuration Management](https://github.com/derferman/seamstress/raw/master/logo.jpg)
+![Seamstress - Simple Configuration Management](https://github.com/kyleconroy/seamstress/raw/master/logo.jpg)
 
 Chef and Puppet are great, but what if you just want to easily manage a couple of servers?
 
