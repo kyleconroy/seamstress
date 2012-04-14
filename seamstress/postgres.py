@@ -12,14 +12,14 @@ def installation():
 def user(name, password):
     cmd = ('psql -c "CREATE USER {} WITH NOCREATEDB NOCREATEUSER '
            'ENCRYPTED PASSWORD E\'{}\'"')
-    with settings(hide("warnings"), warn_only=True):
+    with settings(hide("running", "warnings"), warn_only=True):
         result = sudo(cmd.format(name, password), user='postgres')
     if result.failed and 'role "{}" already exists'.format(name) not in result:
         abort(str(result))
 
 
 def database(name):
-    with settings(hide("warnings"), warn_only=True):
+    with settings(hide("running", "warnings"), warn_only=True):
         result = sudo('psql -c "CREATE DATABASE {}"'.format(name), user='postgres')
     if result.failed and 'database "{}" already exists'.format(name) not in result:
         abort(str(result))

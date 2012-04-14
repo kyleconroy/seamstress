@@ -6,7 +6,7 @@ from seamstress import system
 from fabric.contrib.project import rsync_project
 
 
-__all__ = ["document", "directory", "user", "remote_file", "package",
+__all__ = ["document", "directory", "user", "group", "remote_file", "package",
            "git_repository", "link", "service", "foreman_service", "copy"]
 
 def states(*states):
@@ -93,6 +93,63 @@ def copy(path, source):
     sudo("cp {} {}".format(source, path))
 
 
+def group_create(name, gid=None):
+	"""Creates a group with the given name, and optionally given gid."""
+	options = []
+	if gid:
+		options.append("-g '%s'" % (gid))
+	sudo("groupadd %s '%s'" % (" ".join(options), name))
+
+
+def group_check(name):
+	"""Checks if there is a group defined with the given name,
+	returning its information as a
+	'{"name":<str>,"gid":<str>,"members":<list[str]>}' or 'None' if
+	the group does not exists."""
+	group_data = run("cat /etc/group | egrep '^%s:' ; true" % (name))
+	if group_data:
+		name, _, gid, members = group_data.split(":", 4)
+		return dict(name=name, gid=gid,
+					members=tuple(m.strip() for m in members.split(",")))
+	else:
+		return None
+
+
+def group(name, gid=None):
+	"""Ensures that the group with the given name (and optional gid)
+	exists."""
+	d = group_check(name)
+	if not d:
+		group_create(name, gid)
+	else:
+		if gid != None and d.get("gid") != gid:
+			sudo("groupmod -g %s '%s'" % (gid, name))
+
+
+def group_user_check(group, user):
+	"""Checks if the given user is a member of the given group. It
+	will return 'False' if the group does not exist."""
+	d = group_check(group)
+	if d is None:
+		return False
+	else:
+		return user in d["members"]
+
+
+def group_user_add(group, user):
+	"""Adds the given user/list of users to the given group/groups."""
+	assert group_check(group), "Group does not exist: %s" % (group)
+	if not group_user_check(group, user):
+		sudo("usermod -a -G '%s' '%s'" % (group, user))
+
+
+def group_user_ensure(group, user):
+	"""Ensure that a given user is a member of a given group."""
+	d = group_check(group)
+	if user not in d["members"]:
+		group_user_add(group, user)
+
+
 @states("created", "deleted")
 def user(name, state="created", group=None, system=False):
     if state == "deleted":
@@ -101,12 +158,18 @@ def user(name, state="created", group=None, system=False):
             if result.failed and not result.return_code == 6:
                 abort("Error when deleting user %s. `userdel` command "
                       "exited with status %s" % (name, result.return_code))
-    else:
-        with settings(warn_only=True):
-            result = sudo("useradd %s" % name)
-            if result.failed and not result.return_code == 9:
-                abort("Error when creating user %s. `useradd` command "
-                      "exited with status %s" % (name, result.return_code))
+        return
+
+    with settings(warn_only=True):
+        result = sudo("useradd %s" % name)
+        if result.failed and not result.return_code == 9:
+            abort("Error when creating user %s. `useradd` command "
+                  "exited with status %s" % (name, result.return_code))
+
+
+    if group:
+        group_user_ensure(group, name)
+
 
 
 @states("created", "deleted")
@@ -228,7 +291,7 @@ def foreman_service(name, port=5000, user="ubuntu", env=None):
         cmd = command.format(name, port, user)
 
         if env:
-            cmd += "--env {}".format(env)
+            cmd += " --env {}".format(env)
 
         sudo(cmd)
     with settings(warn_only=True):

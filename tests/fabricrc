@@ -1,4 +1,4 @@
-host_string = ec2-23-21-0-228.compute-1.amazonaws.com 
+host_string = ec2-107-22-86-12.compute-1.amazonaws.com
 user = ubuntu
-key_filename = ~/.ssh/work.pem
+key_filename = ~/.ssh/mlb.pem
 fabfile = ./tests/fabfile.py
